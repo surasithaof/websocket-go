@@ -19,3 +19,14 @@
 
 # Go workspace file
 go.work
+
+
+.dccache
+
+coverage.out
+
+.env
+.env.*
+!.env.example
+
+data/
