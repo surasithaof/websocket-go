@@ -6,7 +6,7 @@ import (
 
 type WebSocketClient interface {
 	GetClient() *Client
-	ReadMessage(handlerFunc HandlerFunc)
+	ReadMessages(handlerFunc HandlerFunc)
 	SendMessage(payload any) error
 }
 

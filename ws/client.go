@@ -16,15 +16,17 @@ type Client struct {
 	//UserID
 	UserID string
 	//Connected socket
-	Conn *websocket.Conn
+	Conn    *websocket.Conn
+	message chan []byte
 }
 
-func NewClient(conn *websocket.Conn, hub *Hub, userID string) WebSocketClient {
+func newClient(conn *websocket.Conn, hub *Hub, userID string) WebSocketClient {
 	c := Client{
-		Hub:    hub,
-		ID:     uuid.NewString(),
-		UserID: userID,
-		Conn:   conn,
+		Hub:     hub,
+		ID:      uuid.NewString(),
+		UserID:  userID,
+		Conn:    conn,
+		message: make(chan []byte),
 	}
 	return &c
 }
@@ -33,13 +35,21 @@ func (c *Client) GetClient() *Client {
 	return c
 }
 
-func (c *Client) ReadMessage(handlerFunc func(payload []byte) error) {
-	defer c.Hub.removeClient(c)
+func (c *Client) ReadMessages(handlerFunc func(payload []byte) error) {
+	defer func() {
+		c.Hub.removeClient(c)
+	}()
+
 	for {
 		_, payload, err := c.Conn.ReadMessage()
 		if err != nil {
-			log.Printf("read message client id:%s, error:%v", c.ID, err)
-			return
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				break
+			}
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("read message client id:%s, error:%v", c.ID, err)
+			}
+			break
 		}
 		handlerFunc(payload)
 	}
@@ -51,11 +61,21 @@ func (c *Client) SendMessage(payload any) error {
 		log.Printf("marshal payload error:%v", err)
 		return err
 	}
-	err = c.Conn.WriteMessage(websocket.TextMessage, payloadJSON)
-	if err != nil {
-		log.Printf("write message client id:%s, error:%v", c.ID, err)
-		return err
-	}
-	log.Println("message send to", c.ID)
+
+	c.message <- payloadJSON
 	return nil
+}
+
+func (c *Client) startWriter() {
+	defer func() {
+		c.Hub.removeClient(c)
+	}()
+
+	for msg := range c.message {
+		err := c.Conn.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			log.Println("send message error: ", err)
+		}
+		log.Println("message send to", c.ID)
+	}
 }

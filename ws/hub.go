@@ -15,7 +15,7 @@ type Hub struct {
 	sync.RWMutex
 }
 
-func NewHub() WebSocketClientManager {
+func newHub() WebSocketClientManager {
 	hub := Hub{
 		clients: make(map[string]*Client),
 	}
@@ -29,12 +29,14 @@ func (h *Hub) GetHub() *Hub {
 func (h *Hub) Connect(w http.ResponseWriter, r *http.Request, userID string) (WebSocketClient, error) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("connect error :", err)
+		log.Println("websocket connect error :", err)
 		return nil, err
 	}
-	client := NewClient(conn, h, userID)
+	client := newClient(conn, h, userID)
 	c := client.GetClient()
 	h.addClient(c.GetClient())
+
+	go c.startWriter()
 
 	return client, nil
 }
@@ -63,7 +65,7 @@ func (h *Hub) Broadcast(payload any) error {
 	for _, c := range h.clients {
 		err := c.SendMessage(payload)
 		if err != nil {
-			log.Printf("broadcast clientID:%s, error:%v", c.ID, err)
+			log.Printf("broadcast message to clientID:%s, error:%v", c.ID, err)
 			return err
 		}
 	}
@@ -84,11 +86,10 @@ func (h *Hub) removeClient(client *Client) {
 
 	err := client.Conn.Close()
 	if err != nil {
-		log.Printf("read message client id:%s, error:%v", client.ID, err)
+		log.Printf("close message client id:%s, error:%v", client.ID, err)
 	}
-	log.Println("closed client id: ", client.ID)
 	delete(h.clients, client.ID)
-	log.Println("unregister client id: ", client.ID)
+	log.Println("closed client id: ", client.ID)
 }
 
 func (h *Hub) Close() {

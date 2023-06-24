@@ -42,8 +42,5 @@ db-migration-force version:
 release:
     git sv next-version
 
-env name:
-	ln -sf .env.{{name}} .env
-
 # https://github.com/pantheon-systems/autotag
 #  go install  github.com/git-chglog/git-chglog/cmd/git-chglog

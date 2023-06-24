@@ -6,11 +6,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/surasithaof/websocket-go/adapters/db"
 	"github.com/surasithaof/websocket-go/adapters/httpserver"
+	"github.com/surasithaof/websocket-go/ws"
 )
 
 type Config struct {
 	HttpServer httpserver.Config
 	Database   db.Config
+	WebSocket  ws.Config
 }
 
 func LoadConfig() (*Config, error) {
