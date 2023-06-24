@@ -15,7 +15,12 @@ connectBtn.onclick = function () {
   ws = new WebSocket(
     "ws://" + document.location.host + "/notification-service/ws"
   );
-  connectBtn.textContent = "Connected";
+
+  ws.onerror = function (ev) {
+    console.error("websocket connection error", ev);
+    window.alert("websocket connection error", ev.data);
+  };
+
   connectBtn.disabled = true;
   disconnectBtn.disabled = false;
   pingBtn.disabled = false;
@@ -25,7 +30,7 @@ connectBtn.onclick = function () {
   };
 
   ws.onclose = function (ev) {
-    connectBtn.textContent = "Connect";
+    pong.textContent = null;
     connectBtn.disabled = false;
     disconnectBtn.disabled = true;
     pingBtn.disabled = true;
