@@ -69,13 +69,13 @@ func wsHandler(hub *ws.Hub) gin.HandlerFunc {
 			return
 		}
 
-		c.SendMessage("Salut!")
-		go c.ReadMessages(func(payload []byte) error {
-			log.Println("received message", string(payload))
+		hub.SetupEventHandler("test", func(event ws.Event, c ws.WebSocketClient) error {
 			c.SendMessage("got your message")
+			log.Println(string(event.Payload))
 			return nil
 		})
 
+		c.SendMessage("Salut!")
 		ctx.Status(http.StatusOK)
 	}
 }

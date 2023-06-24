@@ -35,7 +35,7 @@ func (c *Client) GetClient() *Client {
 	return c
 }
 
-func (c *Client) ReadMessages(handlerFunc func(payload []byte) error) {
+func (c *Client) startReader() {
 	defer func() {
 		c.Hub.removeClient(c)
 	}()
@@ -51,7 +51,18 @@ func (c *Client) ReadMessages(handlerFunc func(payload []byte) error) {
 			}
 			break
 		}
-		handlerFunc(payload)
+
+		var event Event
+		err = json.Unmarshal(payload, &event)
+		if err != nil {
+			log.Println("marshal message error:", err)
+			continue
+		}
+
+		err = c.Hub.routeEvent(event, c)
+		if err != nil {
+			log.Println("handling message error:", err)
+		}
 	}
 }
 

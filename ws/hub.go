@@ -10,6 +10,9 @@ import (
 type Hub struct {
 	clients map[string]*Client
 
+	// to handle incoming message with specific handler
+	handlers map[string]EventHandler
+
 	// Using a syncMutex here to be able to lcok state before editing clients
 	// Could also use Channels to block
 	sync.RWMutex
@@ -17,9 +20,14 @@ type Hub struct {
 
 func newHub() WebSocketClientManager {
 	hub := Hub{
-		clients: make(map[string]*Client),
+		clients:  make(map[string]*Client),
+		handlers: make(map[string]EventHandler),
 	}
 	return &hub
+}
+
+func (h *Hub) SetupEventHandler(eventType string, handlerFunc EventHandler) {
+	h.handlers[eventType] = handlerFunc
 }
 
 func (h *Hub) GetHub() *Hub {
@@ -37,6 +45,8 @@ func (h *Hub) Connect(w http.ResponseWriter, r *http.Request, userID string) (We
 	h.addClient(c.GetClient())
 
 	go c.startWriter()
+
+	go c.startReader()
 
 	return client, nil
 }
@@ -96,4 +106,17 @@ func (h *Hub) Close() {
 	for _, c := range h.clients {
 		h.removeClient(c)
 	}
+}
+
+func (h *Hub) routeEvent(event Event, c *Client) error {
+	handler, ok := h.handlers[event.Type]
+	if !ok {
+		return ErrEventNotSupported
+	}
+
+	err := handler(event, c)
+	if err != nil {
+		return err
+	}
+	return nil
 }
