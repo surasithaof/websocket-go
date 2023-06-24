@@ -2,14 +2,10 @@
 
 WebSocket using [Go](https://go.dev/), [Gin framework](https://github.com/gin-gonic/gin) and [Gorilla WebSocket](https://github.com/gorilla/websocket)
 
-- [ ] Create websocket server and handle connecting clients
-- [ ] Connect to Database (PostgresQL) using [Bun](https://bun.uptrace.dev/) or [GORM](https://gorm.io/) for ORM
-- [ ] Database migration
-- [ ] Send message to specific client in API
-- [ ] Broadcast message to all clients
+- [x] Create websocket server and handle connecting clients
 - [ ] Unit test
 - [ ] Security middleware (JWT, Gocloak)
-- [ ] Client for E2E test
+- [x] Client for E2E test
 - [ ] Docker support
 
 ---
