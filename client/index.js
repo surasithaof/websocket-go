@@ -30,6 +30,7 @@ connectBtn.onclick = function () {
   };
 
   ws.onclose = function (ev) {
+    console.log("websocket closed");
     pong.textContent = null;
     connectBtn.disabled = false;
     disconnectBtn.disabled = true;
