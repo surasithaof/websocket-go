@@ -3,10 +3,9 @@
 WebSocket using [Go](https://go.dev/), [Gin framework](https://github.com/gin-gonic/gin) and [Gorilla WebSocket](https://github.com/gorilla/websocket)
 
 - [x] Create websocket server and handle connecting clients
-- [ ] Unit test
-- [ ] Security middleware (JWT, Gocloak)
+- [x] Unit test
 - [x] Client for E2E test
-- [ ] Docker support
+- [x] Docker support
 
 ---
 

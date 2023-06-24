@@ -47,8 +47,6 @@ func initialApp(rGroup *gin.RouterGroup, config *Config, hub *ws.Hub) {
 	rGroup.GET("/ws", wsHandler(hub))
 	rGroup.StaticFS("/client", http.Dir("./client"))
 	rGroup.GET("/health", healthCheck)
-
-	// _ = db.Connect(config.Database)
 }
 
 func healthCheck(c *gin.Context) {
