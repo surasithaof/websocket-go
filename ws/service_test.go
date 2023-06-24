@@ -47,8 +47,8 @@ func TestWebSocket(t *testing.T) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	var client *websocket.Conn
 	// create websocket client to connect to server
+	var client *websocket.Conn
 	t.Run("connect to server", func(t *testing.T) {
 		client, err = createClient()
 		require.NoError(t, err)

@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/surasithaof/websocket-go/adapters/httpserver"
 	"github.com/surasithaof/websocket-go/ws"
 )
@@ -46,10 +44,9 @@ func Start() error {
 }
 
 func initialApp(rGroup *gin.RouterGroup, config *Config, hub *ws.Hub) {
+	rGroup.GET("/ws", wsHandler(hub))
 	rGroup.StaticFS("/client", http.Dir("./client"))
 	rGroup.GET("/health", healthCheck)
-
-	rGroup.GET("/ws", wsHandler(hub))
 
 	// _ = db.Connect(config.Database)
 }
@@ -58,24 +55,4 @@ func healthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "OK",
 	})
-}
-
-func wsHandler(hub *ws.Hub) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		c, err := hub.Connect(ctx.Writer, ctx.Request, uuid.NewString())
-		if err != nil {
-			log.Println("connect error", err)
-			ctx.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		hub.SetupEventHandler("test", func(event ws.Event, c ws.WebSocketClient) error {
-			c.SendMessage("got your message")
-			log.Println(string(event.Payload))
-			return nil
-		})
-
-		c.SendMessage("Salut!")
-		ctx.Status(http.StatusOK)
-	}
 }
