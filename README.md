@@ -17,12 +17,6 @@ WebSocket using [Go](https://go.dev/), [Gin framework](https://github.com/gin-go
 brew install just
 ```
 
-[golang-migrate](https://github.com/golang-migrate/migrate) to migrate database.
-
-```bash
-brew install golang-migrate
-```
-
 ## Set up .env file
 
 Create `.env` file and set up environment variables (you can copy from `.env.example`)

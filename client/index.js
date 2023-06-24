@@ -12,9 +12,7 @@ connectBtn.onclick = function () {
     return;
   }
 
-  ws = new WebSocket(
-    "ws://" + document.location.host + "/notification-service/ws"
-  );
+  ws = new WebSocket("ws://" + document.location.host + "/ws");
 
   ws.onerror = function (ev) {
     console.error("websocket connection error", ev);
