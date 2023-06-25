@@ -15,7 +15,7 @@ type Hub struct {
 
 	// Using a syncMutex here to be able to lcok state before editing clients
 	// Could also use Channels to block
-	sync.RWMutex
+	mt sync.Mutex
 }
 
 func newHub() WebSocketClientManager {
@@ -51,7 +51,7 @@ func (h *Hub) Connect(w http.ResponseWriter, r *http.Request, userID string) (We
 	return client, nil
 }
 
-func (h *Hub) GetClient(ID string) (bool, *Client) {
+func (h *Hub) GetClient(ID string) (bool, WebSocketClient) {
 	c, found := h.clients[ID]
 	if !found {
 		return false, nil
@@ -59,11 +59,11 @@ func (h *Hub) GetClient(ID string) (bool, *Client) {
 	return true, c
 }
 
-func (h *Hub) GetClientsByUserID(userID string) []*Client {
-	userClients := []*Client{}
+func (h *Hub) GetClientsByUserID(userID string) []WebSocketClient {
+	userClients := []WebSocketClient{}
 
 	for _, c := range h.clients {
-		if c.UserID == userID {
+		if c.userID == userID {
 			userClients = append(userClients, c)
 		}
 	}
@@ -75,7 +75,7 @@ func (h *Hub) Broadcast(payload any) error {
 	for _, c := range h.clients {
 		err := c.SendMessage(payload)
 		if err != nil {
-			log.Printf("broadcast message to clientID:%s, error:%v", c.ID, err)
+			log.Printf("broadcast message to clientID:%s, error:%v", c.id, err)
 			return err
 		}
 	}
@@ -83,23 +83,26 @@ func (h *Hub) Broadcast(payload any) error {
 }
 
 func (h *Hub) addClient(client *Client) *Client {
-	h.Lock()
-	defer h.Unlock()
+	h.mt.Lock()
+	defer h.mt.Unlock()
 
-	h.clients[client.ID] = client
+	h.clients[client.id] = client
 	return client
 }
 
 func (h *Hub) removeClient(client *Client) {
-	h.Lock()
-	defer h.Unlock()
+	h.mt.Lock()
+	defer h.mt.Unlock()
 
-	err := client.Conn.Close()
-	if err != nil {
-		log.Printf("close message client id:%s, error:%v", client.ID, err)
+	c, ok := h.clients[client.id]
+	if ok {
+		err := c.conn.Close()
+		if err != nil {
+			log.Printf("close message client id:%s, error:%v", c.id, err)
+		}
+		delete(h.clients, c.id)
+		log.Println("closed client id: ", c.id)
 	}
-	delete(h.clients, client.ID)
-	log.Println("closed client id: ", client.ID)
 }
 
 func (h *Hub) Close() {
