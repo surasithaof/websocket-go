@@ -7,6 +7,9 @@ build:
     go build -v -o service ./cmd/main.go
 test:
     go test ./...
+test-cov:
+    go test ./... -coverprofile=coverage.out
+
 show-cov:
     go tool cover -html=coverage.out
 generate:

@@ -36,13 +36,11 @@ func TestWebSocket(t *testing.T) {
 
 	received := make(chan ws.Event)
 	defer close(received)
-	done := make(chan bool)
-	defer close(done)
 
 	// setup gin router and websocket handler
 	webSockets := ws.NewWebSocket(config)
 	router := gin.Default()
-	router.GET("/ws", wsHandler(webSockets.GetHub(), received, done))
+	router.GET("/ws", wsHandler(webSockets.GetHub(), received))
 	go router.Run(fmt.Sprintf(":%s", TestPort))
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -58,23 +56,22 @@ func TestWebSocket(t *testing.T) {
 
 	// test read message from the server
 	t.Run("read message", func(t *testing.T) {
-		go func() {
-			_, payload, err := client.ReadMessage()
-			require.NoError(t, err)
-			if err != nil {
-				log.Println("read message error", err)
-				return
-			}
-			log.Println("client got message", string(payload))
 
-			expected, err := json.Marshal("Salut!")
-			require.NoError(t, err)
-			if err != nil {
-				log.Println("mashal expect message error", err)
-				return
-			}
-			assert.Equal(t, expected, payload)
-		}()
+		_, payload, err := client.ReadMessage()
+		require.NoError(t, err)
+		if err != nil {
+			log.Println("read message error", err)
+			return
+		}
+		log.Println("client got message", string(payload))
+
+		expected, err := json.Marshal("Salut!")
+		require.NoError(t, err)
+		if err != nil {
+			log.Println("mashal expect message error", err)
+			return
+		}
+		assert.Equal(t, expected, payload)
 	})
 
 	t.Run("send message", func(t *testing.T) {
@@ -115,8 +112,6 @@ func TestWebSocket(t *testing.T) {
 		case receivedMessage := <-received:
 			assert.Equal(t, HealthCheckEvent, receivedMessage.Type)
 			return
-		case <-done:
-			return
 		case <-ticker.C:
 			require.FailNow(t, "no signal received")
 		}
@@ -132,7 +127,7 @@ func createClient() (*websocket.Conn, error) {
 	return c, err
 }
 
-func wsHandler(hub *ws.Hub, msg chan ws.Event, done chan bool) gin.HandlerFunc {
+func wsHandler(hub *ws.Hub, msg chan ws.Event) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		c, err := hub.Connect(ctx.Writer, ctx.Request, uuid.NewString())
 		if err != nil {
@@ -144,7 +139,6 @@ func wsHandler(hub *ws.Hub, msg chan ws.Event, done chan bool) gin.HandlerFunc {
 		hub.SetupEventHandler(HealthCheckEvent, func(event ws.Event, c ws.WebSocketClient) error {
 			msg <- event
 			log.Println("got message", string(event.Payload))
-			done <- true
 			return nil
 		})
 
