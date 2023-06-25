@@ -94,12 +94,15 @@ func (h *Hub) removeClient(client *Client) {
 	h.mt.Lock()
 	defer h.mt.Unlock()
 
-	err := client.conn.Close()
-	if err != nil {
-		log.Printf("close message client id:%s, error:%v", client.id, err)
+	c, ok := h.clients[client.id]
+	if ok {
+		err := c.conn.Close()
+		if err != nil {
+			log.Printf("close message client id:%s, error:%v", c.id, err)
+		}
+		delete(h.clients, c.id)
+		log.Println("closed client id: ", c.id)
 	}
-	delete(h.clients, client.id)
-	log.Println("closed client id: ", client.id)
 }
 
 func (h *Hub) Close() {
