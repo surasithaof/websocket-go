@@ -12,6 +12,8 @@ type Event struct {
 
 type EventHandler func(event Event, c WebSocketClient) error
 
+type EventNewMessage string
+
 var (
 	ErrEventNotSupported = errors.New("this event type is not supported")
 )

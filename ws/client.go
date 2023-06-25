@@ -10,22 +10,22 @@ import (
 
 // Client
 type Client struct {
-	Hub *Hub
+	hub *Hub
 	//Connection/Client ID
-	ID string
+	id string
 	//UserID
-	UserID string
+	userID string
 	//Connected socket
-	Conn    *websocket.Conn
+	conn    *websocket.Conn
 	message chan []byte
 }
 
 func newClient(conn *websocket.Conn, hub *Hub, userID string) WebSocketClient {
 	c := Client{
-		Hub:     hub,
-		ID:      uuid.NewString(),
-		UserID:  userID,
-		Conn:    conn,
+		hub:     hub,
+		id:      uuid.NewString(),
+		userID:  userID,
+		conn:    conn,
 		message: make(chan []byte),
 	}
 	return &c
@@ -37,17 +37,17 @@ func (c *Client) GetClient() *Client {
 
 func (c *Client) startReader() {
 	defer func() {
-		c.Hub.removeClient(c)
+		c.hub.removeClient(c)
 	}()
 
 	for {
-		_, payload, err := c.Conn.ReadMessage()
+		_, payload, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				break
 			}
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("read message client id:%s, error:%v", c.ID, err)
+				log.Printf("read message client id:%s, error:%v", c.id, err)
 			}
 			break
 		}
@@ -59,7 +59,7 @@ func (c *Client) startReader() {
 			continue
 		}
 
-		err = c.Hub.routeEvent(event, c)
+		err = c.hub.routeEvent(event, c)
 		if err != nil {
 			log.Println("handling message error:", err)
 		}
@@ -79,14 +79,14 @@ func (c *Client) SendMessage(payload any) error {
 
 func (c *Client) startWriter() {
 	defer func() {
-		c.Hub.removeClient(c)
+		c.hub.removeClient(c)
 	}()
 
 	for msg := range c.message {
-		err := c.Conn.WriteMessage(websocket.TextMessage, msg)
+		err := c.conn.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
 			log.Println("send message error: ", err)
 		}
-		log.Println("message send to", c.ID)
+		log.Println("message send to", c.id)
 	}
 }

@@ -48,20 +48,13 @@ func TestWebSocket(t *testing.T) {
 	signal.Notify(interrupt, os.Interrupt)
 
 	// create websocket client to connect to server
-	var client *websocket.Conn
-	t.Run("connect to server", func(t *testing.T) {
-		client, err = createClient()
-		require.NoError(t, err)
-		if err != nil {
-			log.Fatal("dial error:", err)
-			return
-		}
-	})
-	defer func() {
-		if client != nil {
-			client.Close()
-		}
-	}()
+	client, err := createClient()
+	require.NoError(t, err)
+	if err != nil {
+		log.Fatal("dial error:", err)
+		return
+	}
+	defer client.Close()
 
 	// test read message from the server
 	t.Run("read message", func(t *testing.T) {
