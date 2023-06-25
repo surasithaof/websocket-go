@@ -6,6 +6,7 @@ WebSocket using [Go](https://go.dev/), [Gin framework](https://github.com/gin-go
 - [x] Unit test
 - [x] Client for E2E test
 - [x] Docker support
+- [ ] Example chat app
 
 ---
 
