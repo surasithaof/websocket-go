@@ -4,14 +4,12 @@ import (
 	"net/http"
 )
 
-//go:generate mockgen -source=./spec.go -destination=./mocks/websocket.go -package=mocks "surasithaof/websocket-go" WebSocketClient
+//go:generate mockgen -source=./spec.go -destination=./mocks/websocket.go -package=mocks "surasithaof/websocket-go" WebSocketClient WebSocketClientManager
 
 type WebSocketClient interface {
 	GetClient() *Client
 	SendMessage(payload any) error
 }
-
-//go:generate mockgen -source=./spec.go -destination=./mocks/websocket.go -package=mocks "surasithaof/websocket-go" WebSocketClientManager
 
 type WebSocketClientManager interface {
 	GetHub() *Hub

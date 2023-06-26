@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/go-redis/cache/v8"
@@ -13,12 +14,23 @@ type cacheImpl struct {
 }
 
 type Config struct {
-	Addr string `envconfig:"REDIS_ADDR" required:"true"`
+	URL string `envconfig:"REDIS_URL" required:"true"`
 }
 
 func NewCache(config Config) Cache {
+	opt, err := redis.ParseURL(config.URL)
+	if err != nil {
+		log.Fatal("new cache error", err)
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr: config.Addr,
+		Addr: opt.Addr,
+		// Username:     opt.Username,
+		Password:     opt.Password,
+		DB:           opt.DB,
+		DialTimeout:  opt.DialTimeout,
+		ReadTimeout:  opt.ReadTimeout,
+		WriteTimeout: opt.WriteTimeout,
+		PoolSize:     opt.PoolSize,
 	})
 
 	cache := cache.New(&cache.Options{
