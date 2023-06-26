@@ -2,15 +2,15 @@ package ws_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/signal"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
@@ -35,16 +35,18 @@ func TestWebSocket(t *testing.T) {
 	received := make(chan ws.Event)
 	defer close(received)
 
-	// setup gin router and websocket handler
+	// setup http server and websocket handler
 	webSockets := ws.NewWebSocket(config)
-	router := gin.Default()
-	router.GET("/ws", wsHandler(webSockets.GetHub(), received))
-	go router.Run(fmt.Sprintf(":%d", TestPort))
+	defer webSockets.Close()
+
+	s := httptest.NewServer(wsHandler(webSockets.GetHub(), received))
+	defer s.Close()
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	// create websocket client to connect to server
-	client, err := createClient()
+	url := "ws" + strings.TrimPrefix(s.URL, "http")
+	client, _, err := websocket.DefaultDialer.Dial(url, nil)
 	require.NoError(t, err)
 	if err != nil {
 		log.Fatal("dial error:", err)
@@ -120,18 +122,12 @@ func TestWebSocket(t *testing.T) {
 	})
 }
 
-func createClient() (*websocket.Conn, error) {
-	url := fmt.Sprintf("ws://localhost:%d/ws", TestPort)
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
-	return c, err
-}
-
-func wsHandler(hub *ws.Hub, msg chan ws.Event) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		c, err := hub.Connect(ctx.Writer, ctx.Request, uuid.NewString())
+func wsHandler(hub *ws.Hub, msg chan ws.Event) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, err := hub.Connect(w, r, uuid.NewString())
 		if err != nil {
 			log.Println("connect error", err)
-			ctx.AbortWithStatus(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -142,6 +138,6 @@ func wsHandler(hub *ws.Hub, msg chan ws.Event) gin.HandlerFunc {
 		})
 
 		c.SendMessage("Salut!")
-		ctx.Status(http.StatusOK)
+		w.WriteHeader(http.StatusOK)
 	}
 }
