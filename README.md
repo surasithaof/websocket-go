@@ -8,6 +8,7 @@ WebSocket using [Go](https://go.dev/), [Gin framework](https://github.com/gin-go
 - [x] Docker support
 - [x] PingPong health check
 - [ ] Example chat app
+- [ ] Scale up with multiple pods (use Redis as a share memory?)
 
 ---
 
