@@ -112,10 +112,6 @@ func (c *Client) startWriter() {
 			// Ok will be false Incase the egress channel is closed
 			if !ok {
 				// Manager has closed this connection channel, so communicate that to frontend
-				if err := c.conn.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					// Log that the connection is closed and the reason
-					log.Println("connection closed: ", err)
-				}
 				// Return to close the goroutine
 				return
 			}
