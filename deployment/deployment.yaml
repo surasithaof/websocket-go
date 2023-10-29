@@ -1,23 +1,64 @@
+# First, add the API
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  # Name of Deployment
   name: demo-ws
+  labels:
+    # label your deployment
+    app: example-test-app
 spec:
+  # The number of pods/replicas to run
   replicas: 3
   selector:
     matchLabels:
+      # selector to match the pod
       app: demo-ws
   template:
     metadata:
       labels:
+        # label your pod
         app: demo-ws
     spec:
       containers:
+        # Add the container name for Kubernetes
         - name: demo-ws
+          # Add the local image name
           image: go-ws:latest
+          # never pull the image policy
+          imagePullPolicy: Never
           resources:
             limits:
               memory: "128Mi"
               cpu: "500m"
           ports:
+            # port for running the container
             - containerPort: 3000
+          env:
+            # environment variables app needed
+            - name: HTTP_PORT
+              value: "3000"
+            - name: HTTP_MODE
+              value: debug
+---
+# First, add the Service API
+apiVersion: v1
+# Service setup
+kind: Service
+metadata:
+  # Your service name
+  name: demo-ws-svc
+spec:
+  selector:
+    # selector that matches the pod
+    app: demo-ws
+    # type of service
+  type: NodePort
+  ports:
+    - protocol: TCP
+      # port for exposing the service
+      port: 5000
+      # portfor exposing the pod
+      targetPort: 3000
+      # port for exposing the node
+      nodePort: 31110
