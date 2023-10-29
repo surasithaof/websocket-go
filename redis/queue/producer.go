@@ -2,9 +2,9 @@ package redisqueues
 
 import (
 	"log"
+	"strings"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
 )
 
@@ -12,21 +12,20 @@ type Producer struct {
 	client *asynq.Client
 }
 
-func NewProducer(config ClientConfig) QueueProducer {
-	opt, err := redis.ParseURL(config.URL)
-	if err != nil {
-		panic(err)
+func NewProducer(config Config) QueueProducer {
+	var clientOpt asynq.RedisConnOpt
+	if config.ClusterModeEnable {
+		clientOpt = asynq.RedisClusterClientOpt{
+			Addrs: strings.Split(config.URL, ","),
+		}
+	} else {
+		clientOpt = asynq.RedisClientOpt{
+			Addr: config.URL,
+		}
 	}
-	client := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: opt.Addr,
-		// Username: opt.Username,
-		Password: opt.Password,
-		DB:       opt.DB,
-		// DialTimeout:  config.DialTimeout,
-		// ReadTimeout:  config.ReadTimeout,
-		// WriteTimeout: config.WriteTimeout,
-		// PoolSize:     config.PoolSize,
-	})
+
+	client := asynq.NewClient(clientOpt)
+
 	return NewProducerWithClient(client)
 }
 

@@ -12,7 +12,8 @@ connectBtn.onclick = function () {
     return;
   }
 
-  ws = new WebSocket("ws://" + document.location.host + "/ws");
+  const host = "ws://" + document.location.host + "/ws";
+  ws = new WebSocket(host);
 
   ws.onerror = function (ev) {
     console.error("websocket connection error", ev);

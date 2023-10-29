@@ -40,6 +40,8 @@ spec:
               value: "3000"
             - name: HTTP_MODE
               value: debug
+            - name: WS_LOG_PONG_PONG_HEALTH
+              value: "true"
 ---
 # First, add the Service API
 apiVersion: v1

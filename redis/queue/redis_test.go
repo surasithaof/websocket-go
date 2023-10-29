@@ -24,11 +24,11 @@ func TestFull(t *testing.T) {
 	payload, _ := json.Marshal("message")
 	queueName := "foo"
 
-	clientConfig := redisqueues.ClientConfig{URL: redisUrl}
+	clientConfig := redisqueues.Config{URL: redisUrl}
 	producer := redisqueues.NewProducer(clientConfig)
 	defer producer.Shutdown()
 	worker := redisqueues.NewWorker(redisqueues.WorkerConfig{
-		URL: redisUrl,
+		Config: clientConfig,
 	})
 	defer worker.Shutdown()
 
@@ -53,11 +53,11 @@ func TestSchedule(t *testing.T) {
 	queueName := "foo"
 	payload, _ := json.Marshal("message")
 
-	clientConfig := redisqueues.ClientConfig{URL: redisUrl}
+	clientConfig := redisqueues.Config{URL: redisUrl}
 	producer := redisqueues.NewProducer(clientConfig)
 	defer producer.Shutdown()
 	worker := redisqueues.NewWorker(redisqueues.WorkerConfig{
-		URL: redisUrl,
+		Config: clientConfig,
 	})
 	defer worker.Shutdown()
 
